@@ -1,441 +1,579 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>سینما — کشف فیلم‌های برتر</title>
-  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;800&display=swap" rel="stylesheet" />
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CinemaZone — فیلم و سریال</title>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0f;
+  --surface:#12121a;
+  --card:#1a1a26;
+  --border:#2a2a3a;
+  --text:#f0f0f0;
+  --muted:#8888aa;
+  --gold:#f5c518;
+  --cyan:#00d4ff;
+  --pink:#ff2d78;
+  --green:#00e676;
+}
+body{font-family:'Vazirmatn',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
 
-    :root {
-      --bg:       #0b0c10;
-      --surface:  #13151c;
-      --card:     #1a1d27;
-      --gold:     #f5c518;
-      --gold-dim: #b89010;
-      --text:     #e8e8e8;
-      --muted:    #7a7f94;
-      --accent:   #e63946;
-      --border:   #2a2d3a;
-    }
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
 
-    body {
-      font-family: 'Vazirmatn', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-    }
+/* NAV */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:1000;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 24px;
+  background:linear-gradient(to bottom,rgba(10,10,15,.98),transparent);
+  transition:background .3s;
+}
+nav.scrolled{background:rgba(10,10,15,.98);border-bottom:1px solid var(--border)}
+.nav-logo{
+  font-size:1.4rem;font-weight:800;
+  background:linear-gradient(135deg,var(--cyan),var(--pink));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  letter-spacing:-1px;
+}
+.nav-links{display:flex;gap:20px;list-style:none}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:.85rem;transition:color .2s}
+.nav-links a:hover,.nav-links a.active{color:var(--text)}
+.nav-right{display:flex;align-items:center;gap:12px}
+.nav-search-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;padding:6px}
+.nav-search-btn:hover{color:var(--text)}
+.nav-user{
+  width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,var(--cyan),var(--pink));
+  display:flex;align-items:center;justify-content:center;
+  font-size:.75rem;font-weight:700;color:#000;cursor:pointer;
+}
 
-    /* ── NAV ── */
-    nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 18px 40px;
-      background: rgba(11,12,16,.92);
-      backdrop-filter: blur(12px);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      border-bottom: 1px solid var(--border);
-    }
-    .logo {
-      font-size: 1.5rem;
-      font-weight: 800;
-      letter-spacing: -1px;
-    }
-    .logo span { color: var(--gold); }
-    .nav-links { display: flex; gap: 28px; list-style: none; }
-    .nav-links a { color: var(--muted); text-decoration: none; font-size: .9rem; transition: color .2s; }
-    .nav-links a:hover { color: var(--text); }
-    .nav-search {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 8px 16px;
-      color: var(--text);
-      font-family: 'Vazirmatn', sans-serif;
-      font-size: .88rem;
-      width: 200px;
-      outline: none;
-      transition: border-color .2s;
-    }
-    .nav-search:focus { border-color: var(--gold); }
+/* SEARCH OVERLAY */
+.search-overlay{
+  position:fixed;inset:0;z-index:2000;
+  background:rgba(10,10,15,.96);
+  display:none;align-items:flex-start;justify-content:center;
+  padding-top:80px;
+}
+.search-overlay.open{display:flex}
+.search-box{
+  width:90%;max-width:600px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:16px 20px;
+  display:flex;align-items:center;gap:12px;
+}
+.search-box input{
+  flex:1;background:none;border:none;outline:none;
+  color:var(--text);font-family:'Vazirmatn',sans-serif;font-size:1rem;
+}
+.search-box input::placeholder{color:var(--muted)}
+.search-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.2rem}
+#searchResults{
+  width:90%;max-width:600px;margin-top:16px;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+}
 
-    /* ── HERO ── */
-    .hero {
-      position: relative;
-      height: 520px;
-      display: flex;
-      align-items: flex-end;
-      padding: 48px 40px;
-      overflow: hidden;
-      background:
-        linear-gradient(to top, #0b0c10 0%, transparent 60%),
-        linear-gradient(135deg, #1a1030 0%, #0b1a2e 50%, #0b0c10 100%);
-    }
-    .hero-grid {
-      position: absolute;
-      inset: 0;
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 4px;
-      opacity: .18;
-      pointer-events: none;
-    }
-    .hero-grid-cell {
-      background: var(--surface);
-      border-radius: 4px;
-    }
-    .hero-content { position: relative; max-width: 600px; }
-    .hero-badge {
-      display: inline-block;
-      background: var(--accent);
-      color: #fff;
-      font-size: .75rem;
-      font-weight: 600;
-      padding: 4px 12px;
-      border-radius: 4px;
-      margin-bottom: 16px;
-      letter-spacing: 1px;
-    }
-    .hero h1 {
-      font-size: 3rem;
-      font-weight: 800;
-      line-height: 1.1;
-      margin-bottom: 16px;
-    }
-    .hero h1 span { color: var(--gold); }
-    .hero p {
-      color: var(--muted);
-      font-size: 1rem;
-      line-height: 1.7;
-      margin-bottom: 28px;
-      max-width: 420px;
-    }
-    .btn-group { display: flex; gap: 12px; flex-wrap: wrap; }
-    .btn-primary {
-      background: var(--gold);
-      color: #000;
-      border: none;
-      padding: 12px 28px;
-      border-radius: 8px;
-      font-family: 'Vazirmatn', sans-serif;
-      font-size: .95rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: transform .15s, box-shadow .15s;
-    }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(245,197,24,.3); }
-    .btn-outline {
-      background: transparent;
-      color: var(--text);
-      border: 1px solid var(--border);
-      padding: 12px 28px;
-      border-radius: 8px;
-      font-family: 'Vazirmatn', sans-serif;
-      font-size: .95rem;
-      cursor: pointer;
-      transition: border-color .2s;
-    }
-    .btn-outline:hover { border-color: var(--muted); }
+/* HERO */
+.hero{
+  position:relative;height:100vh;min-height:500px;
+  display:flex;align-items:flex-end;
+  overflow:hidden;
+}
+.hero-bg{
+  position:absolute;inset:0;
+  background-size:cover;background-position:center top;
+  transition:opacity .8s;
+}
+.hero-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,var(--bg) 0%,rgba(10,10,15,.5) 50%,transparent 100%),
+             linear-gradient(to right,rgba(10,10,15,.8) 0%,transparent 60%);
+}
+.hero-content{
+  position:relative;z-index:2;
+  padding:0 24px 60px;max-width:500px;
+}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(0,212,255,.15);border:1px solid rgba(0,212,255,.3);
+  color:var(--cyan);font-size:.75rem;font-weight:600;
+  padding:4px 12px;border-radius:20px;margin-bottom:14px;
+}
+.hero-title{font-size:2.4rem;font-weight:800;line-height:1.1;margin-bottom:10px;text-shadow:0 2px 20px rgba(0,0,0,.8)}
+.hero-meta{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.hero-rating{color:var(--gold);font-weight:700;font-size:.9rem}
+.hero-year{color:var(--muted);font-size:.85rem}
+.hero-tag{
+  background:rgba(255,255,255,.1);
+  color:var(--text);font-size:.75rem;
+  padding:2px 10px;border-radius:4px;
+}
+.hero-desc{color:rgba(240,240,240,.75);font-size:.9rem;line-height:1.6;margin-bottom:20px;max-width:380px}
+.hero-btns{display:flex;gap:12px}
+.btn-watch{
+  display:flex;align-items:center;gap:8px;
+  background:linear-gradient(135deg,var(--cyan),#0099cc);
+  color:#000;border:none;padding:12px 24px;border-radius:10px;
+  font-family:'Vazirmatn',sans-serif;font-size:.9rem;font-weight:700;
+  cursor:pointer;transition:transform .15s,box-shadow .15s;
+}
+.btn-watch:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,212,255,.4)}
+.btn-info{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
+  color:var(--text);padding:12px 24px;border-radius:10px;
+  font-family:'Vazirmatn',sans-serif;font-size:.9rem;
+  cursor:pointer;transition:background .2s;
+}
+.btn-info:hover{background:rgba(255,255,255,.18)}
 
-    /* ── SECTION ── */
-    section { padding: 48px 40px; }
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 28px;
-    }
-    .section-title {
-      font-size: 1.25rem;
-      font-weight: 700;
-    }
-    .section-title span { color: var(--gold); }
-    .see-all { color: var(--muted); font-size: .85rem; text-decoration: none; transition: color .2s; }
-    .see-all:hover { color: var(--gold); }
+/* HERO DOTS */
+.hero-dots{
+  position:absolute;bottom:24px;left:50%;transform:translateX(-50%);
+  display:flex;gap:6px;z-index:3;
+}
+.hero-dot{
+  width:6px;height:6px;border-radius:3px;
+  background:rgba(255,255,255,.3);transition:all .3s;cursor:pointer;
+}
+.hero-dot.active{width:24px;background:var(--cyan)}
 
-    /* ── MOVIE GRID ── */
-    .movies-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 20px;
-    }
-    .movie-card {
-      background: var(--card);
-      border-radius: 12px;
-      overflow: hidden;
-      cursor: pointer;
-      transition: transform .2s, box-shadow .2s;
-      border: 1px solid var(--border);
-    }
-    .movie-card:hover { transform: translateY(-6px); box-shadow: 0 16px 40px rgba(0,0,0,.5); }
-    .movie-poster {
-      width: 100%;
-      aspect-ratio: 2/3;
-      object-fit: cover;
-      display: block;
-    }
-    .movie-poster-placeholder {
-      width: 100%;
-      aspect-ratio: 2/3;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-size: 2.5rem;
-      gap: 8px;
-      color: var(--muted);
-    }
-    .movie-info { padding: 14px; }
-    .movie-title {
-      font-size: .92rem;
-      font-weight: 600;
-      margin-bottom: 6px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .movie-meta {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: .78rem;
-      color: var(--muted);
-    }
-    .rating {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      color: var(--gold);
-      font-weight: 600;
-    }
-    .rating span { color: var(--muted); font-weight: 400; }
-    .genre-tag {
-      display: inline-block;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--muted);
-      font-size: .72rem;
-      padding: 2px 8px;
-      border-radius: 4px;
-      margin-top: 8px;
-    }
+/* STATS BAR */
+.stats-bar{
+  background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  padding:16px 24px;
+  display:flex;justify-content:space-around;align-items:center;
+  flex-wrap:wrap;gap:12px;
+}
+.stat{text-align:center}
+.stat-num{font-size:1.1rem;font-weight:800;color:var(--cyan)}
+.stat-label{font-size:.72rem;color:var(--muted);margin-top:2px}
 
-    /* ── CATEGORIES ── */
-    .categories { display: flex; gap: 12px; flex-wrap: wrap; }
-    .cat-btn {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--muted);
-      padding: 10px 20px;
-      border-radius: 50px;
-      font-family: 'Vazirmatn', sans-serif;
-      font-size: .88rem;
-      cursor: pointer;
-      transition: all .2s;
-    }
-    .cat-btn:hover, .cat-btn.active {
-      background: var(--gold);
-      color: #000;
-      border-color: var(--gold);
-      font-weight: 600;
-    }
+/* SECTION */
+section{padding:32px 24px}
+.sec-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.sec-title{display:flex;align-items:center;gap:8px;font-size:1rem;font-weight:700}
+.sec-icon{font-size:1.1rem}
+.sec-sub{font-size:.72rem;color:var(--muted);margin-top:2px}
+.view-all{color:var(--cyan);font-size:.8rem;text-decoration:none;white-space:nowrap}
+.view-all:hover{text-decoration:underline}
 
-    /* ── TOP RATED ── */
-    .top-list { display: flex; flex-direction: column; gap: 14px; }
-    .top-item {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px 18px;
-      transition: border-color .2s;
-      cursor: pointer;
-    }
-    .top-item:hover { border-color: var(--gold-dim); }
-    .top-num {
-      font-size: 1.4rem;
-      font-weight: 800;
-      color: var(--border);
-      min-width: 36px;
-      text-align: center;
-    }
-    .top-emoji { font-size: 2rem; }
-    .top-info { flex: 1; }
-    .top-name { font-weight: 600; font-size: .95rem; margin-bottom: 4px; }
-    .top-sub { font-size: .8rem; color: var(--muted); }
-    .top-score {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--gold);
-    }
+/* HORIZONTAL SCROLL */
+.h-scroll{
+  display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;
+  scrollbar-width:none;
+}
+.h-scroll::-webkit-scrollbar{display:none}
 
-    /* ── FOOTER ── */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 32px 40px;
-      text-align: center;
-      color: var(--muted);
-      font-size: .85rem;
-    }
-    footer strong { color: var(--gold); }
+/* TOP10 CARD */
+.top10-card{
+  position:relative;flex:0 0 130px;cursor:pointer;
+  transition:transform .2s;
+}
+.top10-card:hover{transform:scale(1.04)}
+.top10-img{
+  width:130px;height:190px;border-radius:10px;
+  object-fit:cover;display:block;
+  background:var(--card);
+}
+.top10-img-placeholder{
+  width:130px;height:190px;border-radius:10px;
+  background:var(--card);display:flex;align-items:center;
+  justify-content:center;font-size:2.5rem;
+}
+.top10-num{
+  position:absolute;bottom:-8px;right:-6px;
+  font-size:3.5rem;font-weight:800;line-height:1;
+  color:transparent;
+  -webkit-text-stroke:2px var(--cyan);
+  text-shadow:none;
+  font-style:italic;
+}
+.top10-rating{
+  position:absolute;top:6px;left:6px;
+  background:rgba(0,0,0,.7);
+  color:var(--gold);font-size:.7rem;font-weight:700;
+  padding:2px 6px;border-radius:4px;
+  display:flex;align-items:center;gap:3px;
+}
 
-    @media (max-width: 640px) {
-      nav { padding: 14px 20px; }
-      .nav-links { display: none; }
-      .hero { padding: 32px 20px; height: auto; padding-top: 60px; }
-      .hero h1 { font-size: 2rem; }
-      section { padding: 32px 20px; }
-      .movies-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-  </style>
+/* MOVIE CARD */
+.movie-card{
+  flex:0 0 140px;cursor:pointer;
+  transition:transform .2s;
+}
+.movie-card:hover{transform:translateY(-4px)}
+.movie-card:hover .movie-overlay{opacity:1}
+.movie-thumb-wrap{position:relative;border-radius:10px;overflow:hidden}
+.movie-thumb{
+  width:140px;height:200px;
+  object-fit:cover;display:block;
+  background:var(--card);
+}
+.movie-thumb-placeholder{
+  width:140px;height:200px;
+  background:var(--card);
+  display:flex;align-items:center;justify-content:center;
+  font-size:2.5rem;
+}
+.movie-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(0,0,0,.9),transparent 50%);
+  opacity:0;transition:opacity .2s;
+  display:flex;align-items:flex-end;padding:10px;
+}
+.movie-play{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--cyan);
+  display:flex;align-items:center;justify-content:center;
+  color:#000;font-size:.8rem;margin:auto;
+}
+.movie-badge{
+  position:absolute;top:6px;right:6px;
+  font-size:.65rem;font-weight:700;padding:2px 6px;border-radius:4px;
+}
+.badge-film{background:rgba(0,212,255,.3);color:var(--cyan);border:1px solid rgba(0,212,255,.5)}
+.badge-tv{background:rgba(255,45,120,.3);color:var(--pink);border:1px solid rgba(255,45,120,.5)}
+.movie-info{padding:8px 2px 0}
+.movie-title-small{font-size:.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.movie-meta-small{display:flex;justify-content:space-between;margin-top:4px}
+.movie-year{font-size:.72rem;color:var(--muted)}
+.movie-score{font-size:.72rem;color:var(--gold);font-weight:600}
+
+/* FEATURED COLLECTION */
+.collection-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+}
+.collection-card{
+  border-radius:12px;overflow:hidden;
+  position:relative;cursor:pointer;aspect-ratio:16/9;
+  transition:transform .2s;
+}
+.collection-card:hover{transform:scale(1.02)}
+.collection-card.big{grid-column:1/-1;aspect-ratio:21/9}
+.collection-bg{
+  width:100%;height:100%;
+  object-fit:cover;
+  background:var(--card);
+}
+.collection-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(0,0,0,.85),transparent 50%);
+}
+.collection-info{
+  position:absolute;bottom:12px;right:12px;
+}
+.collection-title{font-size:.95rem;font-weight:700}
+.collection-sub{font-size:.72rem;color:var(--muted);margin-top:2px}
+
+/* LOADING */
+.loading{
+  display:flex;justify-content:center;align-items:center;
+  padding:40px;color:var(--muted);gap:8px;
+}
+.spinner{
+  width:20px;height:20px;border:2px solid var(--border);
+  border-top-color:var(--cyan);border-radius:50%;
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* FOOTER */
+footer{
+  background:var(--surface);
+  border-top:1px solid var(--border);
+  padding:24px;text-align:center;
+}
+.footer-logo{
+  font-size:1.2rem;font-weight:800;
+  background:linear-gradient(135deg,var(--cyan),var(--pink));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  margin-bottom:8px;
+}
+footer p{color:var(--muted);font-size:.8rem;line-height:1.8}
+
+@media(max-width:480px){
+  nav{padding:12px 16px}
+  .nav-links{display:none}
+  .hero-content{padding:0 16px 50px}
+  .hero-title{font-size:1.8rem}
+  section{padding:24px 16px}
+  .stats-bar{padding:12px 16px}
+}
+</style>
 </head>
 <body>
 
-<!-- NAV -->
-<nav>
-  <div class="logo">سینما<span>.</span></div>
-  <ul class="nav-links">
-    <li><a href="#">خانه</a></li>
-    <li><a href="#">فیلم‌ها</a></li>
-    <li><a href="#">سریال‌ها</a></li>
-    <li><a href="#">برترین‌ها</a></li>
-  </ul>
-  <input class="nav-search" placeholder="جستجوی فیلم..." type="text" />
-</nav>
-
-<!-- HERO -->
-<div class="hero">
-  <div class="hero-grid" id="heroGrid"></div>
-  <div class="hero-content">
-    <div class="hero-badge">🎬 تازه‌ترین اضافه‌شده‌ها</div>
-    <h1>دنیای <span>سینما</span> را کشف کن</h1>
-    <p>هزاران فیلم و سریال از سرتاسر جهان — از کلاسیک‌های قدیمی تا جدیدترین اکران‌ها، همه اینجا هستند.</p>
-    <div class="btn-group">
-      <button class="btn-primary">🔍 کشف فیلم‌ها</button>
-      <button class="btn-outline">📋 لیست من</button>
+<!-- SEARCH OVERLAY -->
+<div class="search-overlay" id="searchOverlay">
+  <div style="width:90%;max-width:600px">
+    <div class="search-box">
+      <span>🔍</span>
+      <input type="text" id="searchInput" placeholder="جستجوی فیلم یا سریال..."/>
+      <button class="search-close" onclick="closeSearch()">✕</button>
     </div>
+    <div id="searchResults"></div>
   </div>
 </div>
 
-<!-- CATEGORIES -->
-<section>
-  <div class="section-header">
-    <h2 class="section-title">دسته‌بندی‌ها</h2>
+<!-- NAV -->
+<nav id="navbar">
+  <div class="nav-logo">🎬 CinemaZone</div>
+  <ul class="nav-links">
+    <li><a href="#" class="active">خانه</a></li>
+    <li><a href="#movies">فیلم‌ها</a></li>
+    <li><a href="#series">سریال‌ها</a></li>
+    <li><a href="#top10">برترین‌ها</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="nav-search-btn" onclick="openSearch()">🔍</button>
+    <div class="nav-user">CZ</div>
   </div>
-  <div class="categories">
-    <button class="cat-btn active">همه</button>
-    <button class="cat-btn">اکشن</button>
-    <button class="cat-btn">درام</button>
-    <button class="cat-btn">کمدی</button>
-    <button class="cat-btn">ترسناک</button>
-    <button class="cat-btn">علمی‌تخیلی</button>
-    <button class="cat-btn">انیمیشن</button>
-    <button class="cat-btn">ماجراجویی</button>
-    <button class="cat-btn">تاریخی</button>
+</nav>
+
+<!-- HERO -->
+<div class="hero" id="hero">
+  <div class="hero-bg" id="heroBg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content" id="heroContent">
+    <div class="loading"><div class="spinner"></div> در حال بارگذاری...</div>
+  </div>
+  <div class="hero-dots" id="heroDots"></div>
+</div>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat"><div class="stat-num">500K+</div><div class="stat-label">فیلم</div></div>
+  <div class="stat"><div class="stat-num">100K+</div><div class="stat-label">سریال</div></div>
+  <div class="stat"><div class="stat-num">50M+</div><div class="stat-label">کاربر</div></div>
+  <div class="stat"><div class="stat-num">190+</div><div class="stat-label">کشور</div></div>
+</div>
+
+<!-- TOP 10 -->
+<section id="top10">
+  <div class="sec-header">
+    <div class="sec-title">
+      <span class="sec-icon">🔥</span>
+      <div>
+        <div>Top 10 این هفته</div>
+        <div class="sec-sub">پربیننده‌ترین در جهان</div>
+      </div>
+    </div>
+    <a href="#" class="view-all">مشاهده همه ←</a>
+  </div>
+  <div class="h-scroll" id="top10List">
+    <div class="loading"><div class="spinner"></div></div>
   </div>
 </section>
 
-<!-- FEATURED MOVIES -->
-<section>
-  <div class="section-header">
-    <h2 class="section-title">فیلم‌های <span>برگزیده</span></h2>
-    <a class="see-all" href="#">مشاهده همه ←</a>
+<!-- TRENDING -->
+<section id="movies" style="background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+  <div class="sec-header">
+    <div class="sec-title">
+      <span class="sec-icon">📈</span>
+      <div>
+        <div>Trending این هفته</div>
+        <div class="sec-sub">همه دارند می‌بینند</div>
+      </div>
+    </div>
+    <a href="#" class="view-all">مشاهده همه ←</a>
   </div>
-  <div class="movies-grid" id="moviesGrid"></div>
+  <div class="h-scroll" id="trendingList">
+    <div class="loading"><div class="spinner"></div></div>
+  </div>
 </section>
 
-<!-- TOP RATED -->
-<section style="background: var(--surface); border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
-  <div class="section-header">
-    <h2 class="section-title">برترین <span>فیلم‌های</span> تاریخ</h2>
-    <a class="see-all" href="#">لیست کامل ←</a>
+<!-- ACTION -->
+<section>
+  <div class="sec-header">
+    <div class="sec-title"><span class="sec-icon">💥</span><div>فیلم‌های اکشن</div></div>
+    <a href="#" class="view-all">مشاهده همه ←</a>
   </div>
-  <div class="top-list" id="topList"></div>
+  <div class="h-scroll" id="actionList">
+    <div class="loading"><div class="spinner"></div></div>
+  </div>
+</section>
+
+<!-- SERIES -->
+<section id="series" style="background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+  <div class="sec-header">
+    <div class="sec-title"><span class="sec-icon">📺</span><div>سریال‌های برتر</div></div>
+    <a href="#" class="view-all">مشاهده همه ←</a>
+  </div>
+  <div class="h-scroll" id="seriesList">
+    <div class="loading"><div class="spinner"></div></div>
+  </div>
+</section>
+
+<!-- ANIMATION -->
+<section>
+  <div class="sec-header">
+    <div class="sec-title"><span class="sec-icon">🎨</span><div>انیمیشن</div></div>
+    <a href="#" class="view-all">مشاهده همه ←</a>
+  </div>
+  <div class="h-scroll" id="animList">
+    <div class="loading"><div class="spinner"></div></div>
+  </div>
 </section>
 
 <!-- FOOTER -->
 <footer>
-  <p>ساخته‌شده با ❤️ برای علاقه‌مندان سینما — <strong>سینما.</strong></p>
-  <p style="margin-top:8px; font-size:.8rem;">این یک نمونه آموزشی است</p>
+  <div class="footer-logo">🎬 CinemaZone</div>
+  <p>بهترین فیلم‌ها و سریال‌های دنیا<br>اطلاعات از <a href="https://themoviedb.org" style="color:var(--cyan);text-decoration:none">TMDB</a> · ساخته شده با ❤️</p>
 </footer>
 
 <script>
-  // Hero grid animation
-  const grid = document.getElementById('heroGrid');
-  for (let i = 0; i < 48; i++) {
-    const c = document.createElement('div');
-    c.className = 'hero-grid-cell';
-    c.style.opacity = Math.random() * 0.5 + 0.1;
-    grid.appendChild(c);
+const API_KEY = '8265bd1679663a7ea12ac168da84d2e8';
+const IMG = 'https://image.tmdb.org/t/p/';
+const BASE = 'https://api.themoviedb.org/3';
+
+async function get(url){
+  const r = await fetch(BASE+url+'&api_key='+API_KEY+'&language=fa-IR');
+  if(!r.ok) throw new Error('API Error');
+  return r.json();
+}
+
+// NAV scroll
+window.addEventListener('scroll',()=>{
+  document.getElementById('navbar').classList.toggle('scrolled',scrollY>50);
+});
+
+// SEARCH
+function openSearch(){document.getElementById('searchOverlay').classList.add('open');document.getElementById('searchInput').focus()}
+function closeSearch(){document.getElementById('searchOverlay').classList.remove('open')}
+document.getElementById('searchInput').addEventListener('input',async e=>{
+  const q=e.target.value.trim();
+  const box=document.getElementById('searchResults');
+  if(q.length<2){box.innerHTML='';return}
+  try{
+    const d=await get(`/search/multi?query=${encodeURIComponent(q)}&`);
+    box.innerHTML=d.results.slice(0,6).map(m=>{
+      const img=m.poster_path?`<img src="${IMG}w200${m.poster_path}" style="width:100%;height:120px;object-fit:cover;border-radius:8px" onerror="this.style.display='none'">`:`<div style="width:100%;height:120px;background:var(--card);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:2rem">🎬</div>`;
+      return`<div style="cursor:pointer" onclick="closeSearch()"><div style="border-radius:8px;overflow:hidden">${img}</div><div style="font-size:.8rem;margin-top:6px;font-weight:600">${m.title||m.name||''}</div><div style="font-size:.7rem;color:var(--muted)">${(m.release_date||m.first_air_date||'').slice(0,4)}</div></div>`;
+    }).join('');
+  }catch(e){box.innerHTML='<p style="color:var(--muted);font-size:.85rem;padding:12px">خطا در جستجو</p>'}
+});
+
+// HERO
+let heroMovies=[];let heroIdx=0;let heroTimer;
+async function loadHero(){
+  try{
+    const d=await get('/trending/movie/week?');
+    heroMovies=d.results.slice(0,5);
+    buildHeroDots();
+    showHero(0);
+    heroTimer=setInterval(()=>showHero((heroIdx+1)%heroMovies.length),6000);
+  }catch(e){
+    document.getElementById('heroContent').innerHTML='<p style="color:var(--muted)">خطا در بارگذاری</p>';
   }
+}
+function buildHeroDots(){
+  const dots=document.getElementById('heroDots');
+  dots.innerHTML=heroMovies.map((_,i)=>`<div class="hero-dot${i===0?' active':''}" onclick="showHero(${i})"></div>`).join('');
+}
+function showHero(i){
+  heroIdx=i;
+  const m=heroMovies[i];
+  const bg=document.getElementById('heroBg');
+  if(m.backdrop_path) bg.style.backgroundImage=`url(${IMG}original${m.backdrop_path})`;
+  document.getElementById('heroContent').innerHTML=`
+    <div class="hero-badge">🔥 پرطرفدار این هفته</div>
+    <div class="hero-title">${m.title||m.name}</div>
+    <div class="hero-meta">
+      <span class="hero-rating">⭐ ${m.vote_average?.toFixed(1)||'—'}</span>
+      <span class="hero-year">${(m.release_date||'').slice(0,4)}</span>
+      ${(m.genre_ids||[]).slice(0,2).map(g=>`<span class="hero-tag">${genreName(g)}</span>`).join('')}
+    </div>
+    <div class="hero-desc">${(m.overview||'').slice(0,150)}${m.overview?.length>150?'...':''}</div>
+    <div class="hero-btns">
+      <button class="btn-watch">▶ تماشا کن</button>
+      <button class="btn-info">ℹ اطلاعات بیشتر</button>
+    </div>`;
+  document.querySelectorAll('.hero-dot').forEach((d,j)=>d.classList.toggle('active',j===i));
+}
 
-  // Movie data
-  const movies = [
-    { emoji: '🌀', title: 'گذشته', year: 2013, rating: 8.4, genre: 'درام' },
-    { emoji: '🔫', title: 'پدرخوانده', year: 1972, rating: 9.2, genre: 'جنایی' },
-    { emoji: '🚀', title: 'میان‌ستاره‌ای', year: 2014, rating: 8.6, genre: 'علمی‌تخیلی' },
-    { emoji: '🦁', title: 'شیر شاه', year: 1994, rating: 8.5, genre: 'انیمیشن' },
-    { emoji: '🕶️', title: 'ماتریکس', year: 1999, rating: 8.7, genre: 'اکشن' },
-    { emoji: '🎭', title: 'شوالیه تاریکی', year: 2008, rating: 9.0, genre: 'اکشن' },
-    { emoji: '🌊', title: 'تایتانیک', year: 1997, rating: 7.9, genre: 'درام' },
-    { emoji: '🧠', title: 'ذهن زیبا', year: 2001, rating: 8.2, genre: 'درام' },
-  ];
+// GENRE MAP
+const genres={28:'اکشن',12:'ماجراجویی',16:'انیمیشن',35:'کمدی',80:'جنایی',99:'مستند',18:'درام',10751:'خانوادگی',14:'فانتزی',36:'تاریخی',27:'ترسناک',10402:'موزیکال',9648:'رمز',878:'علمی‌تخیلی',10770:'تلویزیون',53:'هیجانی',10752:'جنگی',37:'وسترن'};
+function genreName(id){return genres[id]||''}
 
-  const grid2 = document.getElementById('moviesGrid');
-  movies.forEach(m => {
-    const bg = ['#1a1d27','#1d1a27','#1a271d','#271a1a'][Math.floor(Math.random()*4)];
-    grid2.innerHTML += `
-      <div class="movie-card">
-        <div class="movie-poster-placeholder" style="background:${bg}">
-          <span>${m.emoji}</span>
-        </div>
-        <div class="movie-info">
-          <div class="movie-title">${m.title}</div>
-          <div class="movie-meta">
-            <div class="rating">⭐ ${m.rating} <span>/ 10</span></div>
-            <div>${m.year}</div>
-          </div>
-          <span class="genre-tag">${m.genre}</span>
-        </div>
-      </div>`;
-  });
+// CARD BUILDERS
+function movieCard(m,badge='FILM'){
+  const img=m.poster_path?`<img class="movie-thumb" src="${IMG}w300${m.poster_path}" loading="lazy" onerror="this.style.display='none'">`:`<div class="movie-thumb-placeholder">🎬</div>`;
+  const badgeClass=badge==='TV'?'badge-tv':'badge-film';
+  return`<div class="movie-card">
+    <div class="movie-thumb-wrap">
+      ${img}
+      <div class="movie-overlay"><div class="movie-play">▶</div></div>
+      <span class="movie-badge ${badgeClass}">${badge}</span>
+    </div>
+    <div class="movie-info">
+      <div class="movie-title-small">${m.title||m.name}</div>
+      <div class="movie-meta-small">
+        <span class="movie-year">${(m.release_date||m.first_air_date||'').slice(0,4)}</span>
+        <span class="movie-score">⭐ ${m.vote_average?.toFixed(1)||'—'}</span>
+      </div>
+    </div>
+  </div>`;
+}
 
-  // Top rated
-  const tops = [
-    { emoji:'🎬', name:'پدرخوانده', info:'فرانسیس فورد کوپولا · ۱۹۷۲', score:'9.2' },
-    { emoji:'🦦', name:'رستگاری در شاوشنک', info:'فرانک دارابونت · ۱۹۹۴', score:'9.3' },
-    { emoji:'🕶️', name:'شوالیه تاریکی', info:'کریستوفر نولان · ۲۰۰۸', score:'9.0' },
-    { emoji:'💍', name:'ارباب حلقه‌ها', info:'پیتر جکسون · ۲۰۰۳', score:'8.9' },
-    { emoji:'🚀', name:'میان‌ستاره‌ای', info:'کریستوفر نولان · ۲۰۱۴', score:'8.6' },
-  ];
+function top10Card(m,i){
+  const img=m.poster_path?`<img class="top10-img" src="${IMG}w300${m.poster_path}" loading="lazy" onerror="this.style.display='none'">`:`<div class="top10-img-placeholder">🎬</div>`;
+  return`<div class="top10-card">
+    ${img}
+    <span class="top10-rating">⭐ ${m.vote_average?.toFixed(1)||'—'}</span>
+    <div class="top10-num">${i+1}</div>
+  </div>`;
+}
 
-  const topList = document.getElementById('topList');
-  tops.forEach((t, i) => {
-    topList.innerHTML += `
-      <div class="top-item">
-        <div class="top-num">0${i+1}</div>
-        <div class="top-emoji">${t.emoji}</div>
-        <div class="top-info">
-          <div class="top-name">${t.name}</div>
-          <div class="top-sub">${t.info}</div>
-        </div>
-        <div class="top-score">⭐ ${t.score}</div>
-      </div>`;
-  });
+// LOADERS
+async function loadTop10(){
+  try{
+    const d=await get('/trending/movie/week?');
+    document.getElementById('top10List').innerHTML=d.results.slice(0,10).map((m,i)=>top10Card(m,i)).join('');
+  }catch(e){document.getElementById('top10List').innerHTML='<p style="color:var(--muted);padding:12px">خطا</p>'}
+}
+async function loadTrending(){
+  try{
+    const d=await get('/trending/all/week?');
+    document.getElementById('trendingList').innerHTML=d.results.slice(0,10).map(m=>movieCard(m,m.media_type==='tv'?'TV':'FILM')).join('');
+  }catch(e){document.getElementById('trendingList').innerHTML='<p style="color:var(--muted);padding:12px">خطا</p>'}
+}
+async function loadAction(){
+  try{
+    const d=await get('/discover/movie?with_genres=28&sort_by=popularity.desc&');
+    document.getElementById('actionList').innerHTML=d.results.slice(0,10).map(m=>movieCard(m)).join('');
+  }catch(e){document.getElementById('actionList').innerHTML='<p style="color:var(--muted);padding:12px">خطا</p>'}
+}
+async function loadSeries(){
+  try{
+    const d=await get('/tv/top_rated?');
+    document.getElementById('seriesList').innerHTML=d.results.slice(0,10).map(m=>movieCard(m,'TV')).join('');
+  }catch(e){document.getElementById('seriesList').innerHTML='<p style="color:var(--muted);padding:12px">خطا</p>'}
+}
+async function loadAnim(){
+  try{
+    const d=await get('/discover/movie?with_genres=16&sort_by=popularity.desc&');
+    document.getElementById('animList').innerHTML=d.results.slice(0,10).map(m=>movieCard(m)).join('');
+  }catch(e){document.getElementById('animList').innerHTML='<p style="color:var(--muted);padding:12px">خطا</p>'}
+}
 
-  // Category buttons
-  document.querySelectorAll('.cat-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-    });
-  });
+// INIT
+loadHero();
+loadTop10();
+loadTrending();
+loadAction();
+loadSeries();
+loadAnim();
 </script>
 </body>
 </html>
