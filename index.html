@@ -365,7 +365,7 @@ async function openDetail(id,type){
     const [info,credits,videos,similar]=await Promise.all([
       api('/'+type+'/'+id+'?'),
       api('/'+type+'/'+id+'/credits?'),
-      api('/'+type+'/'+id+'/videos?language=en-US'),
+      api('/'+type+'/'+id+'/videos?language=en-US').then(async v=>{ if(v.results&&v.results.length>0) return v; return api('/'+type+'/'+id+'/videos?'); }),
       api('/'+type+'/'+id+'/similar?')
     ]);
 
@@ -373,7 +373,7 @@ async function openDetail(id,type){
     if(info.backdrop_path) document.getElementById('detailBg').src=I+'w1280'+info.backdrop_path;
 
     // trailer
-    const trailer=videos.results?.find(v=>v.type==='Trailer'&&v.site==='YouTube')||videos.results?.[0];
+    const trailer=videos.results?.find(v=>v.type==='Trailer'&&v.site==='YouTube')||videos.results?.find(v=>v.site==='YouTube')||videos.results?.[0];
     const trailerHTML=trailer
       ?`<div class="trailer-wrap"><iframe src="https://www.youtube.com/embed/${trailer.key}?autoplay=0" allowfullscreen loading="lazy"></iframe></div>`
       :`<div class="no-trailer">🎬<span>تریلر موجود نیست</span></div>`;
